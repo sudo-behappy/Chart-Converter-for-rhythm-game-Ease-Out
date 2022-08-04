@@ -1,14 +1,41 @@
 from json import load
 from math import ceil, floor
-from os.path import basename, splitext
+from os.path import basename, splitext, exists, dirname, realpath
+from os import mkdir, listdir
+from zipfile import ZipFile
 
 # the original color of the track
 color_reference = [
     "\"red\"", "\"orange\"", "\"green\"", "\"blue\"", "\"purple\""
 ]
 
-path = "D:\\Onedrive_big\\OneDrive - yhdfkef\\fun\\chartGenerator\\chart\\unwelcomeSchool.json"
-chart = load(open(path))
+path = input("path for your chart .mc or .mcz file: ")
+
+# check valid path
+if not exists(path):
+    exit("invalid path")
+
+# check the file extension and process the file
+if splitext(path)[1] == ".mc" or splitext(path)[1] == ".json":
+    chart = load(open(path))
+elif splitext(path)[1] == ".mcz":
+    try:
+        mkdir("./temp/")
+    except FileExistsError:
+        pass
+    f = ZipFile(path, "r")
+    name = None
+    for file in f.namelist():
+        if splitext(file)[1] == ".mc":
+            name = file
+            f.extract(file, "./temp")
+            break
+    for file in listdir("./temp"):
+        if splitext(file)[1] == ".mc":
+            chart = load(open("./temp/" + name))
+            break
+else:
+    exit("invalid file type")
 
 # predefined delta scale to avoid the decimal error
 DELTA_SCALE = 100000000
@@ -17,7 +44,7 @@ TEMPLATES = {
     "tap": "\tnote({track}, {color}, \"{type}\", SPEED, {init_time})\n",
     "hold": "\tnote({track}, {color}, \"{type}\", SPEED, {init_time})\n",
     "long": "\tlong_note({track}, {color}, SPEED, {init_time}, {end_time})\n",
-    "long_hold": "\tlong_hold({track}, \"{color}\", SPEED, {init_time}, {end_time})\n",
+    "long_hold": "\tlong_hold({track}, {color}, SPEED, {init_time}, {end_time})\n",
     "kill": "\tkill_track({track}, {init_time})\n"
 }
 
@@ -74,7 +101,7 @@ def check_hold(note: dict) -> bool:
     return get_time(note["endbeat"], delta) - get_time(note['beat'], delta) <= delta / DELTA_SCALE + 0.1
 
 
-# format the note, return a formated string
+# format the note, return a formatted string
 def format_note(note, track) -> str:
     template = TEMPLATES[note[3]]
     template = template.format(
@@ -110,14 +137,14 @@ def check_consecutive_hold(notes, start_idx, track) -> tuple:
             else:
                 break
         except IndexError:
-            return (init_time, end_time + delta * 2)
+            return (init_time, end_time + round_fixed(delta  * 2 / DELTA_SCALE, 3))
     if is_consecutive_hold:
-        return (init_time, end_time + delta * 2)
+        return (init_time, end_time + round_fixed(delta  * 2 / DELTA_SCALE, 3))
     return (-1, -1)
 
 
 bpm = chart["time"][0]["bpm"]
-length = format_time("2:27.383")
+length = format_time(input("the length of the song, as shown in the malody chart editor"))
 delta = int(get_delta(bpm, length[0], length[1]) * DELTA_SCALE)
 
 note_list = [[], [], [], [], []]
@@ -145,7 +172,7 @@ for i in chart["note"]:
         if i["endbeat"][2] == 32:
             key_type = "kill"
             track_vanish_time[track] = init_time
-        if check_hold(i):
+        elif check_hold(i):
             key_type = "hold"
             end_time = get_time(i["endbeat"], delta)
         else:
@@ -181,7 +208,23 @@ for i in range(len(note_list)):
         idx += 1
 
 # writing into file
-with open("{}.txt".format(splitext(basename(path))[0]), "w+") as f:
+try:
+    mkdir("./out")
+except FileExistsError:
+    pass
+with open("./out/{}.txt".format(splitext(basename(path))[0]), "w+") as f:
+
+    # make sure the iterating one is the longest
+    max_cnt = -114514
     for i in range(5):
-        for j in note_list[i]:
-            f.write(format_note(j, i))
+        max_cnt = max(max_cnt, len(note_list[i]))
+    for i in range(max_cnt):
+        flag = 0
+        for j in range(5):
+            try:
+                f.write(format_note(note_list[j][i], j))
+            except IndexError:
+                flag += 1
+            finally:
+                if flag >= 5:
+                    break

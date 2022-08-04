@@ -154,3 +154,4 @@ cython_debug/
 # the chart folder
 chart/
 out/
+temp/
