@@ -192,7 +192,6 @@ for i in range(len(note_list)):
             # delete all the notes covered by long note
             if time == (-1, -1):
                 idx += 1
-                continue
             else:
                 note_list[i][idx][3] = "long_hold"
                 note_list[i][idx][1] = time[0]
@@ -203,10 +202,15 @@ for i in range(len(note_list)):
             if i < 2:
                 note_list[i + 1].append(notes)
                 note_list[i].pop(idx)
-                continue
+                if notes[1] > track_vanish_time[i + 1]:
+                    note_list[i + 2].append(notes)
+                    note_list[i + 1].pop(idx)
             elif i > 2:
                 note_list[i - 1].append(notes)
                 note_list[i].pop(idx)
+                if notes[1] > track_vanish_time[i - 1]:
+                    note_list[i - 2].append(notes)
+                    note_list[i - 1].pop(idx)
         idx += 1
 
 # writing into file
