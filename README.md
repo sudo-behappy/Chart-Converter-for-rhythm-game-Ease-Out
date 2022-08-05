@@ -58,6 +58,7 @@ You can put notes on that track as usual. The note on it will automatically be s
 
 1. the chart must be 5k and all the tracks must be destroyed at the end of the song.
 2. the track must be destroyed from left to right, or right to left. You must not delete a track between two tracks.
+3. the track in the middle must be the last track to be destroyed.
 3. right now the chart converting tool does not support multiple BPM chart, so no change of speed or multiple BPM among the malody chart.
 4. keep in mind that the notes above the deleted chart will be shifted to the other track while players are playing the chart.
 5. No overlapping notes with different color, or long note inside a long note(same or different color).
@@ -115,7 +116,8 @@ hold是*Phigros*中的黄键
 
 1. 谱面必须是5key谱面, 所有的track在歌曲的最后必须被销毁
 2. 轨道必须以从左到右/从右到左的顺序被销毁, 当一个轨道的两侧轨道没有被销毁之前, 你不能销毁那个轨道
-3. 现在这个铺面转换器暂时不支持多BPM的谱面, 所以说在malody中不要使用多BPM或变速谱面.
-4. 注意, 当你在轨道被销毁之后在上面写note, 在玩家游玩的时候note会自动传递给相邻的轨道, 来增加游戏难度. 注意不要让玩家过于受苦.
-5. 不要写重叠的不同颜色note, 或者同色和异色的重叠note
-6. 不要写大粪谱! 不要写大粪谱! 不要写大粪谱!
+3. 中间的轨道必须是最后一个被销毁的轨道
+4. 现在这个铺面转换器暂时不支持多BPM的谱面, 所以说在malody中不要使用多BPM或变速谱面.
+5. 注意, 当你在轨道被销毁之后在上面写note, 在玩家游玩的时候note会自动传递给相邻的轨道, 来增加游戏难度. 注意不要让玩家过于受苦.
+6. 不要写重叠的不同颜色note, 或者同色和异色的重叠note
+7. 不要写大粪谱! 不要写大粪谱! 不要写大粪谱!
