@@ -137,13 +137,15 @@ def check_consecutive_hold(notes, start_idx, track) -> tuple:
             else:
                 break
         except IndexError:
-            return (init_time, end_time + round_fixed(delta  * 2 / DELTA_SCALE, 3))
+            return init_time, end_time + round_fixed(delta * 2 / DELTA_SCALE, 3)
     if is_consecutive_hold:
-        return (init_time, end_time + round_fixed(delta  * 2 / DELTA_SCALE, 3))
-    return (-1, -1)
+        return init_time, end_time + round_fixed(delta * 2 / DELTA_SCALE, 3)
+    return -1, -1
 
 
 bpm = chart["time"][0]["bpm"]
+name = chart["meta"]["song"]["title"]
+artist = chart["meta"]["song"]["artist"]
 length = format_time(input("the length of the song, as shown in the malody chart editor"))
 delta = int(get_delta(bpm, length[0], length[1]) * DELTA_SCALE)
 
@@ -212,7 +214,7 @@ try:
     mkdir("./out")
 except FileExistsError:
     pass
-with open("./out/{}.txt".format(splitext(basename(path))[0]), "w+") as f:
+with open("./out/{}_by_{}.txt".format(name, artist), "w+") as f:
 
     # make sure the iterating one is the longest
     max_cnt = -114514
