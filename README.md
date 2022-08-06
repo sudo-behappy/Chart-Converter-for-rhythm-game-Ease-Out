@@ -6,17 +6,15 @@ a tool to convert 5k malody chart to chart script inside Ease Out
 
 It currently does not support multiple BPM or notes other than 1/4 notes
 
+## malody on google drive
+
+[link](https://drive.google.com/drive/folders/1AUlt_o0fJfNcoEWlPVQgW9cvpJIG58t7)
+
 ## how to use:
 
 you first need to create a **5k** malody chart, with specified requirements and note references.
 
-then, create a terminal window inside the repo folder, run the program with:
-
-```bash
-python main.py
-```
-
-or run the main.exe file in the release folder
+Run the main_gui.exe file in the `./dist` folder
 
 Then, input the path of .mc, .mcz, or .json file corresponding to your chart
 
@@ -24,7 +22,7 @@ Then, input the length of the music **inside the malody editor**(with the format
 
 The program will guide you while you are doing so.
 
-The program will generate a \[songName\].txt file in the `./out` folder with the chart gdscript code in it. Copy and paste that to the `chart_\[corresponding difficulty(EZ, HD, IN, AT)\]()` method in the godot editor
+The program will generate the copyable gdscript code for the chart. Copy and paste that to the `chart_\[corresponding difficulty(EZ, HD, IN, AT)\]()` method in the godot editor
 
 don't forget to check the indentation.
 
@@ -64,25 +62,21 @@ You can put notes on that track as usual. The note on it will automatically be s
 5. No overlapping notes with different color, or long note inside a long note(same or different color).
 6. NO SHIT CHART, NO SHIT CHART, NO SHIT CHART!
 
+## malody下载地址(百度网盘)
+
+[链接](https://pan.baidu.com/s/1JWbv4iMiw1MZvM9xtYjIJg?pwd=kksk)
+
 ## 如何使用
 
 首先, 在malody中, 按照[音符映射表](#音符映射表)和给定的[要求](#要求)创作一个**5key**谱面.
 
-然后, 在repo目录打开一个终端, 运行
-
-```commandline
-
-python main_chs.py
-
-```
-
-或运行release文件夹中的main.exe
+然后运行`./dist`中的main_gui_chs.exe
 
 然后, 根据程序指示, 填入谱面文件(.mc, .mcz 或.json文件)路径和**malody编辑器内部**的谱面时长(分钟:秒, 秒填入所有的小数位).
 
 程序提供了充分的指引
 
-程序会在`./out`目录下生成一个\[歌名\].txt文件, 包含着谱面对应的gdscript代码. 将代码复制到godot编辑器中的`chart_\[对应难度(EZ, HD, IN, AT)\]()`方法下
+程序会成成可复制的gdscript代码. 将代码复制到godot编辑器中的`chart_\[对应难度(EZ, HD, IN, AT)\]()`方法下
 
 不要忘记检查缩进
 
