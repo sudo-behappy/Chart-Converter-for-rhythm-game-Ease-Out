@@ -1,41 +1,14 @@
 from json import load
 from math import ceil, floor
-from os.path import basename, splitext, exists, dirname, realpath
+from os.path import splitext, exists, isdir
 from os import mkdir, listdir
 from zipfile import ZipFile
+from tkinter import Tk
 
 # the original color of the track
 color_reference = [
     "\"red\"", "\"orange\"", "\"green\"", "\"blue\"", "\"purple\""
 ]
-
-path = input("path for your chart .mc or .mcz file: ")
-
-# check valid path
-if not exists(path):
-    exit("invalid path")
-
-# check the file extension and process the file
-if splitext(path)[1] == ".mc" or splitext(path)[1] == ".json":
-    chart = load(open(path))
-elif splitext(path)[1] == ".mcz":
-    try:
-        mkdir("./temp/")
-    except FileExistsError:
-        pass
-    f = ZipFile(path, "r")
-    name = None
-    for file in f.namelist():
-        if splitext(file)[1] == ".mc":
-            name = file
-            f.extract(file, "./temp")
-            break
-    for file in listdir("./temp"):
-        if splitext(file)[1] == ".mc":
-            chart = load(open("./temp/" + name))
-            break
-else:
-    exit("invalid file type")
 
 # predefined delta scale to avoid the decimal error
 DELTA_SCALE = 100000000
@@ -47,6 +20,45 @@ TEMPLATES = {
     "long_hold": "\tlong_hold({track}, {color}, SPEED, {init_time}, {end_time})\n",
     "kill": "\tkill_track({track}, {init_time})\n"
 }
+
+# when the track vanish, used for note transfer
+track_vanish_time = [-1.0, -1.0, -1.0, -1.0, -1.0]
+
+
+# add to clipboard
+def add_to_clipboard(text):
+    temp = Tk()
+    temp.withdraw()
+    temp.clipboard_clear()
+    temp.clipboard_append(text)
+    temp.update()
+    temp.destroy()
+
+
+# check the file extension and process the file
+def get_chart_dict(path):
+    if not exists(path) or isdir(path):
+        return "invalid path"
+    elif splitext(path)[1] == ".mc" or splitext(path)[1] == ".json":
+        chart = load(open(path))
+    elif splitext(path)[1] == ".mcz":
+        try:
+            mkdir("./.temp/")
+        except FileExistsError:
+            pass
+        f = ZipFile(path, "r")
+        name = None
+        for file in f.namelist():
+            if splitext(file)[1] == ".mc":
+                name = file
+                f.extract(file, "./temp")
+                break
+        for file in listdir("./temp"):
+            if splitext(file)[1] == ".mc":
+                chart = load(open("./temp/" + name))
+                break
+            exit("chart file not found")
+    return chart
 
 
 # fixed round function
@@ -65,7 +77,7 @@ def get_delta(BPM, lenM, lenS, note_type=4) -> float:
     song_time_minute = round_fixed(song_time_second / 60, 10)
     total_beat = round_fixed(BPM * song_time_minute, 5)
     delta = song_time_second / (total_beat * note_type)
-    return delta
+    return int(delta * DELTA_SCALE)
 
 
 # transform the malody time to real time
@@ -78,10 +90,14 @@ def get_time(node, delta: float) -> float:
 
 # better input of the time
 def format_time(time: str) -> tuple:
-    return (
-        int(time.split(":")[0]),
-        float(time.split(":")[1])
-    )
+    if ":" in time:
+        if len(time.split(":")) > 2:
+            return -1, -1
+        return int(time.split(":")[0]), float(time.split(":")[1])
+    try:
+        return 0, float(time)
+    except ValueError:
+        return -1, -1
 
 
 # avoid the malody bug(sometimes the number will go above 4 and 32)
@@ -97,7 +113,7 @@ def flatten_note(note):
 
 
 # check if the note is hold, pass in a dictionary note
-def check_hold(note: dict) -> bool:
+def check_hold(note: dict, delta) -> bool:
     return get_time(note["endbeat"], delta) - get_time(note['beat'], delta) <= delta / DELTA_SCALE + 0.1
 
 
@@ -114,12 +130,12 @@ def format_note(note, track) -> str:
 
 
 # pass in two list note
-def check_consecutive_note(note1, note2):
+def check_consecutive_note(note1, note2, delta) -> bool:
     return delta / DELTA_SCALE - 0.001 < round_fixed(abs(note2[1] - note1[2]), 3) < delta / DELTA_SCALE + 0.001
 
 
 # pass in a track array, check if long hold was needed
-def check_consecutive_hold(notes, start_idx, track) -> tuple:
+def check_consecutive_hold(notes, start_idx, track, delta, note_list) -> tuple:
     idx = start_idx
     init_time = notes[idx][1]
     end_time = notes[idx][2]
@@ -127,7 +143,7 @@ def check_consecutive_hold(notes, start_idx, track) -> tuple:
     while True:
         try:
             if notes[idx][3] == "hold" and notes[idx + 1][3] == "hold" and check_consecutive_note(notes[idx],
-                                                                                                  notes[idx + 1]):
+                                                                                                  notes[idx + 1], delta):
                 # ans[track].append([color, init_time, end_time, key_type])
                 end_time = notes[idx + 1][2]
                 # after the note was merged, clean the chart
@@ -143,84 +159,86 @@ def check_consecutive_hold(notes, start_idx, track) -> tuple:
     return -1, -1
 
 
-bpm = chart["time"][0]["bpm"]
-name = chart["meta"]["song"]["title"]
-artist = chart["meta"]["song"]["artist"]
-length = format_time(input("the length of the song, as shown in the malody chart editor"))
-delta = int(get_delta(bpm, length[0], length[1]) * DELTA_SCALE)
+# get the metadata from the chart
+def get_meta(chart, time) -> tuple:
+    bpm = chart["time"][0]["bpm"]
+    name = chart["meta"]["song"]["title"]
+    artist = chart["meta"]["song"]["artist"]
+    length = format_time(time)
+    if length == (-1, -1):
+        return -1, -1, -1, -1
+    return bpm, name, artist, length
 
-note_list = [[], [], [], [], []]
 
 '''
 use note_list to store note data.
 each track was represented by an element of the array.
 '''
 
-# when the track vanish, used for note transfer
-track_vanish_time = [-1.0, -1.0, -1.0, -1.0, -1.0]
 
 # get all notes into the list
-for i in chart["note"]:
-    if "column" not in i.keys():
-        break
-    i = flatten_note(i)
-    track = i["column"]
-    color = color_reference[track]
-    key_type = "tap"
-    end_time = None
-    init_time = get_time(i["beat"], delta)
-    if "endbeat" in i.keys():
-        temp = i["endbeat"]
-        if i["endbeat"][2] == 32:
-            key_type = "kill"
-            track_vanish_time[track] = init_time
-        elif check_hold(i):
-            key_type = "hold"
-            end_time = get_time(i["endbeat"], delta)
-        else:
-            key_type = "long"
-            end_time = get_time(i["endbeat"], delta)
-    # input(str([color, init_time, end_time, key_type]))
-    note_list[track].append([color, init_time, end_time, key_type])
+def get_note_list(chart, delta):
+    note_list = [[], [], [], [], []]
+    for i in chart["note"]:
+        if "column" not in i.keys():
+            break
+        i = flatten_note(i)
+        track = i["column"]
+        color = color_reference[track]
+        key_type = "tap"
+        end_time = None
+        init_time = get_time(i["beat"], delta)
+        if "endbeat" in i.keys():
+            if i["endbeat"][2] == 32:
+                key_type = "kill"
+                track_vanish_time[track] = init_time
+            elif check_hold(i, delta):
+                key_type = "hold"
+                end_time = get_time(i["endbeat"], delta)
+            else:
+                key_type = "long"
+                end_time = get_time(i["endbeat"], delta)
+        # input(str([color, init_time, end_time, key_type]))
+        note_list[track].append([color, init_time, end_time, key_type])
+    return note_list
+
 
 # adjusting the notes
-for i in range(len(note_list)):
-    idx = 0
-    for notes in note_list[i]:
-        if notes[3] == 'hold':
-            time = check_consecutive_hold(note_list[i], idx, i)
-            # delete all the notes covered by long note
-            if time == (-1, -1):
-                idx += 1
-            else:
-                note_list[i][idx][3] = "long_hold"
-                note_list[i][idx][1] = time[0]
-                note_list[i][idx][2] = time[1]
+def adjust_notes(note_list, delta) -> list:
+    for i in range(len(note_list)):
+        idx = 0
+        for notes in note_list[i]:
+            if notes[3] == 'hold':
+                time = check_consecutive_hold(note_list[i], idx, i, delta, note_list)
+                # delete all the notes covered by long note
+                if time == (-1, -1):
+                    idx += 1
+                else:
+                    note_list[i][idx][3] = "long_hold"
+                    note_list[i][idx][1] = time[0]
+                    note_list[i][idx][2] = time[1]
 
-        # shift the note
-        if notes[1] > track_vanish_time[i]:
-            if i < 2:
-                note_list[i + 1].append(notes)
-                note_list[i].pop(idx)
-                if notes[1] > track_vanish_time[i + 1]:
-                    note_list[i + 2].append(notes)
-                    note_list[i + 1].pop(idx)
-            elif i > 2:
-                note_list[i - 1].append(notes)
-                note_list[i].pop(idx)
-                if notes[1] > track_vanish_time[i - 1]:
-                    note_list[i - 2].append(notes)
-                    note_list[i - 1].pop(idx)
-        idx += 1
+            # shift the note
+            if notes[1] > track_vanish_time[i]:
+                if i < 2:
+                    note_list[i + 1].append(notes)
+                    note_list[i].pop(idx)
+                    if notes[1] > track_vanish_time[i + 1]:
+                        note_list[i + 2].append(notes)
+                        note_list[i + 1].pop(idx)
+                elif i > 2:
+                    note_list[i - 1].append(notes)
+                    note_list[i].pop(idx)
+                    if notes[1] > track_vanish_time[i - 1]:
+                        note_list[i - 2].append(notes)
+                        note_list[i - 1].pop(idx)
+            idx += 1
+    return note_list
 
-# writing into file
-try:
-    mkdir("./out")
-except FileExistsError:
-    pass
-with open("./out/{}_by_{}.txt".format(name, artist), "w+") as f:
 
-    # make sure the iterating one is the longest
+# generate the code string for the chart
+def generate_code_string(note_list):
+    ans = ''
     max_cnt = -114514
     for i in range(5):
         max_cnt = max(max_cnt, len(note_list[i]))
@@ -228,9 +246,12 @@ with open("./out/{}_by_{}.txt".format(name, artist), "w+") as f:
         flag = 0
         for j in range(5):
             try:
-                f.write(format_note(note_list[j][i], j))
+                ans += (format_note(note_list[j][i], j))
+            # if it reaches the end of the track, check
             except IndexError:
                 flag += 1
             finally:
+                # if all 5 tracks were checked, break the loop
                 if flag >= 5:
                     break
+    return ans
