@@ -18,7 +18,7 @@ class MainDialog(QtWidgets.QDialog):
         else:
             meta = main.get_meta(chart, length)
             if meta == (-1, -1, -1, -1):
-                self.ui.chartSource.setPlainText("error: invalid time(please use English :, not：)")
+                self.ui.chartSource.setPlainText("error: invalid time")
             else:
                 delta = main.get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1])
                 note_list = main.get_note_list(chart, delta)

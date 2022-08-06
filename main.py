@@ -36,7 +36,8 @@ def add_to_clipboard(text):
 
 
 # check the file extension and process the file
-def get_chart_dict(path):
+def get_chart_dict(path:str):
+    path = path.replace("\"", "")
     if not exists(path) or isdir(path):
         return "invalid path"
     elif splitext(path)[1] == ".mc" or splitext(path)[1] == ".json":
@@ -90,6 +91,7 @@ def get_time(node, delta: float) -> float:
 
 # better input of the time
 def format_time(time: str) -> tuple:
+    time = time.replace("：", ":")
     if ":" in time:
         if len(time.split(":")) > 2:
             return -1, -1
@@ -142,8 +144,9 @@ def check_consecutive_hold(notes, start_idx, track, delta, note_list) -> tuple:
     is_consecutive_hold = False
     while True:
         try:
-            if notes[idx][3] == "hold" and notes[idx + 1][3] == "hold" and check_consecutive_note(notes[idx],
-                                                                                                  notes[idx + 1], delta):
+            if notes[idx][3] == "hold" \
+                    and notes[idx + 1][3] == "hold" \
+                    and check_consecutive_note(notes[idx], notes[idx + 1], delta):
                 # ans[track].append([color, init_time, end_time, key_type])
                 end_time = notes[idx + 1][2]
                 # after the note was merged, clean the chart
@@ -205,34 +208,42 @@ def get_note_list(chart, delta):
 
 # adjusting the notes
 def adjust_notes(note_list, delta) -> list:
-    for i in range(len(note_list)):
-        idx = 0
-        for notes in note_list[i]:
-            if notes[3] == 'hold':
-                time = check_consecutive_hold(note_list[i], idx, i, delta, note_list)
-                # delete all the notes covered by long note
-                if time == (-1, -1):
-                    idx += 1
-                else:
-                    note_list[i][idx][3] = "long_hold"
-                    note_list[i][idx][1] = time[0]
-                    note_list[i][idx][2] = time[1]
+    for i in range(2):
+        for i in range(len(note_list)):
+            idx = 0
+            for notes in note_list[i]:
+                if notes[3] == 'hold':
+                    time = check_consecutive_hold(note_list[i], idx, i, delta, note_list)
+                    if time == (-1, -1):
+                        idx += 1
+                        continue
+                    else:
+                        note_list[i][idx][3] = "long_hold"
+                        note_list[i][idx][1] = time[0]
+                        note_list[i][idx][2] = time[1]
+                idx += 1
+            idx = 0
+            print(len(note_list[i]))
+            while idx < len(note_list[i]):
+                from time import sleep
+                notes = note_list[i][idx]
+                if notes[1] > track_vanish_time[i]:
+                    if i < 2:
+                        note_list[i + 1].append(notes)
+                        note_list[i].remove(notes)
+                        if notes[1] > track_vanish_time[i + 1]:
+                            note_list[i + 2].append(notes)
+                            note_list[i + 1].remove(notes)
+                    elif i > 2:
+                        note_list[i - 1].append(notes)
+                        note_list[i].remove(notes)
+                        if notes[1] > track_vanish_time[i - 1]:
+                            note_list[i - 2].append(notes)
+                            note_list[i - 1].remove(notes)
+                    continue
 
-            # shift the note
-            if notes[1] > track_vanish_time[i]:
-                if i < 2:
-                    note_list[i + 1].append(notes)
-                    note_list[i].pop(idx)
-                    if notes[1] > track_vanish_time[i + 1]:
-                        note_list[i + 2].append(notes)
-                        note_list[i + 1].pop(idx)
-                elif i > 2:
-                    note_list[i - 1].append(notes)
-                    note_list[i].pop(idx)
-                    if notes[1] > track_vanish_time[i - 1]:
-                        note_list[i - 2].append(notes)
-                        note_list[i - 1].pop(idx)
-            idx += 1
+                idx += 1
+
     return note_list
 
 
@@ -255,3 +266,21 @@ def generate_code_string(note_list):
                 if flag >= 5:
                     break
     return ans
+
+# for debugging
+def get_chart(path, length):
+    if exists(path) or not length == '':
+        chart = get_chart_dict(path)
+    if chart == "invalid path":
+        exit("invalid path")
+    else:
+        meta = get_meta(chart, length)
+        if meta == (-1, -1, -1, -1):
+            exit("error: invalid time(please use English :, not：)")
+        else:
+            delta = get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1])
+            note_list = get_note_list(chart, delta)
+            adjusted_note_list = adjust_notes(note_list, delta)
+            chart_string = generate_code_string(adjusted_note_list)
+    return chart_string
+
