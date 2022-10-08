@@ -14,7 +14,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(416, 555)
+        Dialog.resize(416, 537)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
+        Dialog.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
         Dialog.setFont(font)
@@ -25,6 +30,7 @@ class Ui_Dialog(object):
         self.copy.setGeometry(QtCore.QRect(30, 500, 371, 26))
         self.copy.setObjectName("copy")
         self.path = QtWidgets.QLineEdit(Dialog)
+        self.path.setEnabled(True)
         self.path.setGeometry(QtCore.QRect(30, 70, 371, 21))
         self.path.setObjectName("path")
         self.guide2 = QtWidgets.QLabel(Dialog)
@@ -62,7 +68,7 @@ class Ui_Dialog(object):
         self.path.setText(_translate("Dialog", "PATH_TO_CHART_FILE"))
         self.guide2.setText(_translate("Dialog", "Length of the song, as shown in malody editor:"))
         self.generateChart.setText(_translate("Dialog", "Generate Chart"))
-        self.guide1.setText(_translate("Dialog", "Your chart file(.mc, .mcz or .json) path:"))
+        self.guide1.setText(_translate("Dialog", "Your chart file(.mc or .json) path:"))
         self.guide3.setText(_translate("Dialog", "Chart source:"))
         self.chartSource.setHtml(_translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"

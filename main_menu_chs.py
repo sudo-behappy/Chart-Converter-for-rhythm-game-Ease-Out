@@ -15,6 +15,11 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(416, 555)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
+        Dialog.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
         Dialog.setFont(font)
@@ -22,7 +27,7 @@ class Ui_Dialog(object):
         self.length.setGeometry(QtCore.QRect(30, 150, 371, 21))
         self.length.setObjectName("length")
         self.copy = QtWidgets.QPushButton(Dialog)
-        self.copy.setGeometry(QtCore.QRect(30, 500, 371, 26))
+        self.copy.setGeometry(QtCore.QRect(30, 500, 371, 24))
         self.copy.setObjectName("copy")
         self.path = QtWidgets.QLineEdit(Dialog)
         self.path.setGeometry(QtCore.QRect(30, 70, 371, 21))
@@ -48,7 +53,6 @@ class Ui_Dialog(object):
         self.name.setGeometry(QtCore.QRect(30, 240, 251, 16))
         self.name.setText("")
         self.name.setObjectName("name")
-
         self.retranslateUi(Dialog)
         self.generateChart.clicked.connect(lambda: Dialog.get_chart(self.path.text(), self.length.text()))
         self.copy.clicked.connect(lambda: Dialog.to_clipboard(self.chartSource.toPlainText()))
@@ -62,7 +66,7 @@ class Ui_Dialog(object):
         self.path.setText(_translate("Dialog", "PATH_TO_CHART_FILE"))
         self.guide2.setText(_translate("Dialog", "malody编辑器中显示的歌曲长度"))
         self.generateChart.setText(_translate("Dialog", "生成谱面"))
-        self.guide1.setText(_translate("Dialog", "谱面文件(.mc, .mcz 或 .json) 路径:"))
+        self.guide1.setText(_translate("Dialog", "谱面文件(.mc 或 .json) 路径:"))
         self.guide3.setText(_translate("Dialog", "谱面源代码："))
         self.chartSource.setHtml(_translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"

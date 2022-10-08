@@ -16,13 +16,13 @@ you first need to create a **5k** malody chart, with specified requirements and 
 
 Run the main_gui.exe file in the `./dist` folder
 
-Then, input the path of .mc, .mcz, or .json file corresponding to your chart
+Then, input the path of .mc or .json file corresponding to your chart
 
 Then, input the length of the music **inside the malody editor**(with the format **M:S**, keep all the decimals).
 
 The program will guide you while you are doing so.
 
-The program will generate the copyable gdscript code for the chart. Copy and paste that to the `chart_\[corresponding difficulty(EZ, HD, IN, AT)\]()` method in the godot editor
+The program will generate the copyable gdscript code for the chart. Copy and paste that to the `chart_[corresponding difficulty(EZ, HD, IN, IM)]()` method in the godot editor
 
 don't forget to check the indentation.
 
@@ -76,7 +76,7 @@ You can put notes on that track as usual. The note on it will automatically be s
 
 程序提供了充分的指引
 
-程序会成成可复制的gdscript代码. 将代码复制到godot编辑器中的`chart_\[对应难度(EZ, HD, IN, AT)\]()`方法下
+程序会成成可复制的gdscript代码. 将代码复制到godot编辑器中的`chart_[对应难度(EZ, HD, IN, IM)]()`方法下
 
 不要忘记检查缩进
 

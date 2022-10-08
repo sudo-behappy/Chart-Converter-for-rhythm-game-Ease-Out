@@ -156,9 +156,9 @@ def check_consecutive_hold(notes, start_idx, track, delta, note_list) -> tuple:
             else:
                 break
         except IndexError:
-            return init_time, end_time + round_fixed(delta * 2 / DELTA_SCALE, 3)
+            return init_time, end_time
     if is_consecutive_hold:
-        return init_time, end_time + round_fixed(delta * 2 / DELTA_SCALE, 3)
+        return init_time, end_time
     return -1, -1
 
 

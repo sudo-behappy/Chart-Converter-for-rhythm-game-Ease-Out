@@ -10,6 +10,12 @@
     <height>555</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="font">
    <font>
     <family>微软雅黑</family>
@@ -45,6 +51,9 @@
    </property>
   </widget>
   <widget class="QLineEdit" name="path">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>30</x>
@@ -96,7 +105,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Your chart file(.mc, .mcz or .json) path:</string>
+    <string>Your chart file(.mc or .json) path:</string>
    </property>
    <property name="wordWrap">
     <bool>true</bool>

@@ -10,6 +10,12 @@
     <height>555</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="font">
    <font>
     <family>微软雅黑</family>
@@ -37,7 +43,7 @@
      <x>30</x>
      <y>500</y>
      <width>371</width>
-     <height>26</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="text">
@@ -96,7 +102,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>谱面文件(.mc, .mcz 或 .json) 路径:</string>
+    <string>谱面文件(.mc 或 .json) 路径:</string>
    </property>
    <property name="wordWrap">
     <bool>true</bool>
