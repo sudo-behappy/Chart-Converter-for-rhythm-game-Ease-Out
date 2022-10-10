@@ -10,7 +10,7 @@ color_reference = [
     "\"red\"", "\"orange\"", "\"green\"", "\"blue\"", "\"purple\""
 ]
 
-# predefined delta scale to avoid the decimal error
+# predefined get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2]) scale to avoid the decimal error
 DELTA_SCALE = 100000000
 
 TEMPLATES = {
@@ -22,7 +22,7 @@ TEMPLATES = {
 }
 
 # when the track vanish, used for note transfer
-track_vanish_time = [-1.0, -1.0, -1.0, -1.0, -1.0]
+track_vanish_time = [114514.0, 114514.0, 114514.0, 114514.0, 114514.0]
 
 
 # add to clipboard
@@ -42,23 +42,6 @@ def get_chart_dict(path:str):
         return "invalid path"
     elif splitext(path)[1] == ".mc" or splitext(path)[1] == ".json":
         chart = load(open(path))
-    elif splitext(path)[1] == ".mcz":
-        try:
-            mkdir("./.temp/")
-        except FileExistsError:
-            pass
-        f = ZipFile(path, "r")
-        name = None
-        for file in f.namelist():
-            if splitext(file)[1] == ".mc":
-                name = file
-                f.extract(file, "./temp")
-                break
-        for file in listdir("./temp"):
-            if splitext(file)[1] == ".mc":
-                chart = load(open("./temp/" + name))
-                break
-            exit("chart file not found")
     return chart
 
 
@@ -77,12 +60,13 @@ def get_delta(BPM, lenM, lenS, note_type=4) -> float:
     song_time_second = lenM * 60 + lenS
     song_time_minute = round_fixed(song_time_second / 60, 10)
     total_beat = round_fixed(BPM * song_time_minute, 5)
+    print(note_type)
     delta = song_time_second / (total_beat * note_type)
     return int(delta * DELTA_SCALE)
 
 
 # transform the malody time to real time
-def get_time(node, delta: float) -> float:
+def get_time(node, delta) -> float:
     return round_fixed(
         (node[0] * node[2] * delta + (node[1]) * delta) / DELTA_SCALE,
         3
@@ -105,7 +89,7 @@ def format_time(time: str) -> tuple:
 # avoid the malody bug(sometimes the number will go above 4 and 32)
 def flatten_note(note):
     for i in range(1, 3):
-        if note['beat'][i] > 4:
+        if note['beat'][i] > 32:
             note['beat'][i] = int(note['beat'][i] / 72)
     if "endbeat" in note.keys():
         for i in range(1, 3):
@@ -180,7 +164,7 @@ each track was represented by an element of the array.
 
 
 # get all notes into the list
-def get_note_list(chart, delta):
+def get_note_list(chart, meta):
     note_list = [[], [], [], [], []]
     for i in chart["note"]:
         if "column" not in i.keys():
@@ -190,30 +174,32 @@ def get_note_list(chart, delta):
         color = color_reference[track]
         key_type = "tap"
         end_time = None
-        init_time = get_time(i["beat"], delta)
+        print(i)
+        init_time = get_time(i["beat"], get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2]))
         if "endbeat" in i.keys():
             if i["endbeat"][2] == 32:
                 key_type = "kill"
                 track_vanish_time[track] = init_time
-            elif check_hold(i, delta):
+            elif check_hold(i, get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2])):
                 key_type = "hold"
-                end_time = get_time(i["endbeat"], delta)
+                end_time = get_time(i["endbeat"], get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2]))
             else:
                 key_type = "long"
-                end_time = get_time(i["endbeat"], delta)
-        # input(str([color, init_time, end_time, key_type]))
+                end_time = get_time(i["endbeat"], get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2]))
+
         note_list[track].append([color, init_time, end_time, key_type])
     return note_list
 
 
 # adjusting the notes
-def adjust_notes(note_list, delta) -> list:
-    for i in range(2):
+def adjust_notes(note_list, meta) -> list:
+    # IDK why but must do more than one loop to make the chart configured correctly
+    for j in range(2):
         for i in range(len(note_list)):
             idx = 0
             for notes in note_list[i]:
                 if notes[3] == 'hold':
-                    time = check_consecutive_hold(note_list[i], idx, i, delta, note_list)
+                    time = check_consecutive_hold(note_list[i], idx, i, get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2]), note_list)
                     if time == (-1, -1):
                         idx += 1
                         continue
@@ -223,10 +209,9 @@ def adjust_notes(note_list, delta) -> list:
                         note_list[i][idx][2] = time[1]
                 idx += 1
             idx = 0
-            print(len(note_list[i]))
             while idx < len(note_list[i]):
-                from time import sleep
                 notes = note_list[i][idx]
+                input(str(notes))
                 if notes[1] > track_vanish_time[i]:
                     if i < 2:
                         note_list[i + 1].append(notes)
@@ -241,7 +226,6 @@ def adjust_notes(note_list, delta) -> list:
                             note_list[i - 2].append(notes)
                             note_list[i - 1].remove(notes)
                     continue
-
                 idx += 1
 
     return note_list
@@ -278,9 +262,8 @@ def get_chart(path, length):
         if meta == (-1, -1, -1, -1):
             exit("error: invalid time(please use English :, not：)")
         else:
-            delta = get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1])
-            note_list = get_note_list(chart, delta)
-            adjusted_note_list = adjust_notes(note_list, delta)
+            note_list = get_note_list(chart, meta)
+            adjusted_note_list = adjust_notes(note_list, meta)
             chart_string = generate_code_string(adjusted_note_list)
     return chart_string
 
