@@ -60,7 +60,6 @@ def get_delta(BPM, lenM, lenS, note_type=4) -> float:
     song_time_second = lenM * 60 + lenS
     song_time_minute = round_fixed(song_time_second / 60, 10)
     total_beat = round_fixed(BPM * song_time_minute, 5)
-    print(note_type)
     delta = song_time_second / (total_beat * note_type)
     return int(delta * DELTA_SCALE)
 
@@ -174,7 +173,6 @@ def get_note_list(chart, meta):
         color = color_reference[track]
         key_type = "tap"
         end_time = None
-        print(i)
         init_time = get_time(i["beat"], get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2]))
         if "endbeat" in i.keys():
             if i["endbeat"][2] == 32:
@@ -182,10 +180,10 @@ def get_note_list(chart, meta):
                 track_vanish_time[track] = init_time
             elif check_hold(i, get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2])):
                 key_type = "hold"
-                end_time = get_time(i["endbeat"], get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2]))
+                end_time = get_time(i["endbeat"], get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['endbeat'][2]))
             else:
                 key_type = "long"
-                end_time = get_time(i["endbeat"], get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2]))
+                end_time = get_time(i["endbeat"], get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['endbeat'][2]))
 
         note_list[track].append([color, init_time, end_time, key_type])
     return note_list
@@ -211,7 +209,6 @@ def adjust_notes(note_list, meta) -> list:
             idx = 0
             while idx < len(note_list[i]):
                 notes = note_list[i][idx]
-                input(str(notes))
                 if notes[1] > track_vanish_time[i]:
                     if i < 2:
                         note_list[i + 1].append(notes)
