@@ -1,8 +1,6 @@
 from json import load
 from math import ceil, floor
 from os.path import splitext, exists, isdir
-from os import mkdir, listdir
-from zipfile import ZipFile
 from tkinter import Tk
 
 # the original color of the track

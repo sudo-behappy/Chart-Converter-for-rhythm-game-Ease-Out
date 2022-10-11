@@ -14,12 +14,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(416, 537)
+        Dialog.resize(416, 545)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
         Dialog.setSizePolicy(sizePolicy)
+        Dialog.setMinimumSize(QtCore.QSize(416, 545))
+        Dialog.setMaximumSize(QtCore.QSize(416, 545))
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
         Dialog.setFont(font)
@@ -58,6 +60,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
         self.generateChart.clicked.connect(lambda: Dialog.get_chart(self.path.text(), self.length.text()))
         self.copy.clicked.connect(lambda: Dialog.to_clipboard(self.chartSource.toPlainText()))
+        self.copy.clicked.connect(Dialog.accept)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
