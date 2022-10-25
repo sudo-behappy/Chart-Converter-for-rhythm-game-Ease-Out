@@ -20,11 +20,7 @@ class MainDialog(QtWidgets.QDialog):
             if meta == (-1, -1, -1, -1):
                 self.ui.chartSource.setPlainText("error: invalid time")
             else:
-                delta = main.get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1])
-                note_list = main.get_note_list(chart, delta)
-                adjusted_note_list = main.adjust_notes(note_list, delta)
-                chart_string = main.generate_code_string(adjusted_note_list)
-                self.ui.chartSource.setPlainText(chart_string)
+                self.ui.chartSource.setPlainText(main.get_chart(path, length))
 
     def to_clipboard(self, text):
         main.add_to_clipboard(text)
