@@ -188,14 +188,26 @@ def get_note_list(chart, meta):
 
 
 # adjusting the notes
-def adjust_notes(note_list, meta) -> list:
+def adjust_notes(note_list, meta, chart) -> list:
     # IDK why but must do more than one loop to make the chart configured correctly
     for j in range(2):
         for i in range(len(note_list)):
             idx = 0
             for notes in note_list[i]:
                 if notes[3] == 'hold':
-                    time = check_consecutive_hold(note_list[i], idx, i, get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2]), note_list)
+                    print(notes)
+                    time = check_consecutive_hold(
+                        note_list[i],
+                        idx,
+                        i,
+                        get_delta(
+                            BPM=meta[0],
+                            lenM=meta[3][0],
+                            lenS=meta[3][1],
+                            note_type=chart['note'][i]['beat'][2]
+                        ),
+                        note_list
+                    )
                     if time == (-1, -1):
                         idx += 1
                         continue
@@ -258,7 +270,6 @@ def get_chart(path, length):
             exit("error: invalid time(please use English :, not：)")
         else:
             note_list = get_note_list(chart, meta)
-            adjusted_note_list = adjust_notes(note_list, meta)
+            adjusted_note_list = adjust_notes(note_list, meta, chart)
             chart_string = generate_code_string(adjusted_note_list)
     return chart_string
-

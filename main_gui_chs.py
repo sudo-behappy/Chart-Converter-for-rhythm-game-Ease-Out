@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 import sys
-import main
+from main import get_chart, get_meta, exists, get_chart_dict, add_to_clipboard
 import main_menu_chs
 
 
@@ -11,23 +11,19 @@ class MainDialog(QtWidgets.QDialog):
         self.ui.setupUi(self)
 
     def get_chart(self, path, length):
-        if main.exists(path) or not length == '':
-            chart = main.get_chart_dict(path)
+        if exists(path) or not length == '':
+            chart = get_chart_dict(path)
         if chart == "invalid path":
             self.ui.chartSource.setPlainText("错误: 非法路径")
         else:
-            meta = main.get_meta(chart, length)
+            meta = get_meta(chart, length)
             if meta == (-1, -1, -1, -1):
                 self.ui.chartSource.setPlainText("错误: 非法时间(请使用半角冒号(:))")
             else:
-                delta = main.get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1])
-                note_list = main.get_note_list(chart, delta)
-                adjusted_note_list = main.adjust_notes(note_list, delta)
-                chart_string = main.generate_code_string(adjusted_note_list)
-                self.ui.chartSource.setPlainText(chart_string)
+                self.ui.chartSource.setPlainText(get_chart(path, length))
 
     def to_clipboard(self, text):
-        main.add_to_clipboard(text)
+        add_to_clipboard(text)
 
 
 if __name__ == "__main__":
