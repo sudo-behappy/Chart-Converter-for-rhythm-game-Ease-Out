@@ -60,7 +60,6 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
         self.generateChart.clicked.connect(lambda: Dialog.get_chart(self.path.text(), self.length.text()))
         self.copy.clicked.connect(lambda: Dialog.to_clipboard(self.chartSource.toPlainText()))
-        self.copy.clicked.connect(Dialog.accept)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
