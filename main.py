@@ -12,10 +12,10 @@ color_reference = [
 DELTA_SCALE = 100000000
 
 TEMPLATES = {
-    "tap": "\tnote({track}, {color}, \"{type}\", SPEED, {init_time})\n",
-    "hold": "\tnote({track}, {color}, \"{type}\", SPEED, {init_time})\n",
-    "long": "\tlong_note({track}, {color}, SPEED, {init_time}, {end_time})\n",
-    "long_hold": "\tlong_hold({track}, {color}, SPEED, {init_time}, {end_time})\n",
+    "tap": "\tnote({track}, {color}, \"{type}\", SPEED * {multiplier}, {init_time})\n",
+    "hold": "\tnote({track}, {color}, \"{type}\", SPEED * {multiplier}, {init_time})\n",
+    "long": "\tlong_note({track}, {color}, SPEED * {multiplier}, {init_time}, {end_time})\n",
+    "long_hold": "\tlong_hold({track}, {color}, SPEED * {multiplier}, {init_time}, {end_time})\n",
     "kill": "\tkill_track({track}, {init_time})\n"
 }
 
@@ -40,7 +40,7 @@ def get_chart_dict(path:str):
         return "invalid path"
     elif splitext(path)[1] == ".mc" or splitext(path)[1] == ".json":
         chart = load(open(path))
-    return chart
+        return chart
 
 
 # fixed round function
@@ -97,18 +97,20 @@ def flatten_note(note):
 
 # check if the note is hold, pass in a dictionary note
 def check_hold(note: dict, delta) -> bool:
-    return get_time(note["endbeat"], delta) - get_time(note['beat'], delta) <= delta / DELTA_SCALE + 0.1
+    return get_time(note["endbeat"], delta) - get_time(note["beat"], delta) <= delta / DELTA_SCALE + 0.1
 
 
 # format the note, return a formatted string
-def format_note(note, track) -> str:
+def format_note(note, track, multiplier = 1) -> str:
     template = TEMPLATES[note[3]]
     template = template.format(
         track=track,
         color=note[0],
         init_time=note[1],
         type=note[3],
-        end_time=note[2])
+        end_time=note[2],
+        multiplier=multiplier
+    )
     return template
 
 
@@ -237,7 +239,6 @@ def adjust_notes(note_list, meta, chart) -> list:
 
     return note_list
 
-
 # generate the code string for the chart
 def generate_code_string(note_list):
     ans = ''
@@ -272,4 +273,4 @@ def get_chart(path, length):
             note_list = get_note_list(chart, meta)
             adjusted_note_list = adjust_notes(note_list, meta, chart)
             chart_string = generate_code_string(adjusted_note_list)
-    return chart_string
+            return chart_string
