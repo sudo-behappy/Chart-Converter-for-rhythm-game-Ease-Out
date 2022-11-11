@@ -113,6 +113,19 @@ def format_note(note, track, multiplier = 1) -> str:
     )
     return template
 
+def get_bpm_dict(chart, length):
+    # get the metadata from the chart
+    
+
+def get_meta(chart, time) -> tuple:
+    name = chart["meta"]["song"]["title"]
+    artist = chart["meta"]["song"]["artist"]
+    length = format_time(time)
+    bpm = chart["time"][0]["bpm"]
+    if length == (-1, -1):
+        return -1, -1, -1, -1
+    return bpm, name, artist, length
+
 
 # pass in two list note
 def check_consecutive_note(note1, note2, delta) -> bool:
@@ -145,15 +158,6 @@ def check_consecutive_hold(notes, start_idx, track, delta, note_list) -> tuple:
     return -1, -1
 
 
-# get the metadata from the chart
-def get_meta(chart, time) -> tuple:
-    bpm = chart["time"][0]["bpm"]
-    name = chart["meta"]["song"]["title"]
-    artist = chart["meta"]["song"]["artist"]
-    length = format_time(time)
-    if length == (-1, -1):
-        return -1, -1, -1, -1
-    return bpm, name, artist, length
 
 
 '''
