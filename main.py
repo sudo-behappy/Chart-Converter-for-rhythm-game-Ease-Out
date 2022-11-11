@@ -1,3 +1,4 @@
+import json
 from json import load
 from math import ceil, floor
 from os.path import splitext, exists, isdir
@@ -39,7 +40,10 @@ def get_chart_dict(path:str):
     if not exists(path) or isdir(path):
         return "invalid path"
     elif splitext(path)[1] == ".mc" or splitext(path)[1] == ".json":
-        chart = load(open(path))
+        try:
+            chart = load(open(path))
+        except json.JSONDecodeError:
+            return "invalid path"
         return chart
 
 
@@ -54,7 +58,6 @@ def round_fixed(num: float, rnd: int) -> float:
 # get the time between each small beat
 def get_delta(BPM, lenM, lenS, note_type=4) -> float:
     # declared to determine when to kill track
-    global total_beat
     song_time_second = lenM * 60 + lenS
     song_time_minute = round_fixed(song_time_second / 60, 10)
     total_beat = round_fixed(BPM * song_time_minute, 5)
@@ -62,10 +65,10 @@ def get_delta(BPM, lenM, lenS, note_type=4) -> float:
     return int(delta * DELTA_SCALE)
 
 
-# transform the malody time to real time
-def get_time(node, delta) -> float:
+# transform the malody time to real time, pass in a note list and the delta
+def get_time(note, delta) -> float:
     return round_fixed(
-        (node[0] * node[2] * delta + (node[1]) * delta) / DELTA_SCALE,
+        (note[0] * note[2] * delta + (note[1]) * delta) / DELTA_SCALE,
         3
     )
 
@@ -101,7 +104,7 @@ def check_hold(note: dict, delta) -> bool:
 
 
 # format the note, return a formatted string
-def format_note(note, track, multiplier = 1) -> str:
+def format_note(note, track, multiplier=1) -> str:
     template = TEMPLATES[note[3]]
     template = template.format(
         track=track,
@@ -113,10 +116,27 @@ def format_note(note, track, multiplier = 1) -> str:
     )
     return template
 
-def get_bpm_dict(chart, length):
-    # get the metadata from the chart
-    
 
+def get_bpm_dict(chart, length):
+    bpm_list = chart["time"]
+    ans = {}
+    time = []
+    time_elapsed = 0
+    for i in range(1, len(bpm_list)):
+        # add new element to the dict
+        period_length = get_time(bpm_list[i]["beat"], get_delta(
+                round_fixed(bpm_list[i + 1 if i + 1 < len(bpm_list) else len(bpm_list) - 1]["bpm"], 3),
+                length // 60,
+                length % 60,
+                bpm_list[i]["beat"][2] if bpm_list[i]["beat"][2] != 1 else 4))
+        time.append(round_fixed(time_elapsed, 3) + period_length)
+        print(round_fixed(time_elapsed, 3), period_length)
+        time_elapsed += period_length
+        print(round_fixed(time_elapsed, 3), period_length)
+    return time
+
+
+# get the metadata from the chart
 def get_meta(chart, time) -> tuple:
     name = chart["meta"]["song"]["title"]
     artist = chart["meta"]["song"]["artist"]
@@ -158,8 +178,6 @@ def check_consecutive_hold(notes, start_idx, track, delta, note_list) -> tuple:
     return -1, -1
 
 
-
-
 '''
 use note_list to store note data.
 each track was represented by an element of the array.
@@ -177,7 +195,10 @@ def get_note_list(chart, meta):
         color = color_reference[track]
         key_type = "tap"
         end_time = None
-        init_time = get_time(i["beat"], get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2]))
+        init_time = get_time(
+            i["beat"],
+            get_delta(BPM=meta[0], lenM=meta[3][0], lenS=meta[3][1], note_type=i['beat'][2])
+        )
         if "endbeat" in i.keys():
             if i["endbeat"][2] == 32:
                 key_type = "kill"
@@ -243,6 +264,7 @@ def adjust_notes(note_list, meta, chart) -> list:
 
     return note_list
 
+
 # generate the code string for the chart
 def generate_code_string(note_list):
     ans = ''
@@ -263,7 +285,7 @@ def generate_code_string(note_list):
                     break
     return ans
 
-# for debugging
+
 def get_chart(path, length):
     if exists(path) or not length == '':
         chart = get_chart_dict(path)
@@ -278,3 +300,10 @@ def get_chart(path, length):
             adjusted_note_list = adjust_notes(note_list, meta, chart)
             chart_string = generate_code_string(adjusted_note_list)
             return chart_string
+
+
+path = "D:\\Fun\\Malody\\beatmap\\_temp_1668141116\\1668141116.json"
+length = "2:19.7"
+
+chart = get_chart_dict(path)
+print(get_bpm_dict(chart, format_time(length)[0] * 60 + format_time(length)[1]))
